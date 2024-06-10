@@ -9,14 +9,14 @@ class Bank:
     self.amount+=amt
     return self.amount
 
-  async def debit(self,amt:int)->int:
+  def debit(self,amt:int)->int:
     if amt>self.amount:
       raise Exception("Cannot withdraw")
     self.amount-=amt
-    return await self.amount
+    return  self.amount
     
-  async def calculation(self):
+  def calculation(self):
     x=self.credit(100)
     y=self.debit(100)
-    return await self.amount
+    return  self.amount
 

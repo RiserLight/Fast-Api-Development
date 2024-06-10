@@ -69,12 +69,13 @@ By using virtual environments, developers can ensure that their projects are mor
 
 11. Use gitignore generators to generate gitignore for your project.
 
-3. FastApi automaticallay converts the dictionary to json and sends it to the web browser.
+12. fastapi dev main.py (start the application)
 
-4. HTTP defines a set of request methods to indicate the desired action to be performed for a given resource. Although they can also be nouns, these request methods are sometimes referred to as HTTP verbs. Each of them implements a different semantic, but some common features are shared by a group of them: e.g. a request method can be safe, idempotent, or cacheable.
+13. FastApi automaticallay converts the dictionary to json and sends it to the web browser.
 
+14. HTTP defines a set of request methods to indicate the desired action to be performed for a given resource. 
 GET
-The GET method requests a representation of the specified resource. Requests using GET should only retrieve data. It does not have a request body.
+Requests using GET should only retrieve data. It does not have a request body.
 
 HEAD
 The HEAD method asks for a response identical to a GET request, but without the response body.
@@ -100,36 +101,156 @@ The TRACE method performs a message loop-back test along the path to the target 
 PATCH
 The PATCH method applies partial modifications to a resource.Has request body.
 
-5. FastAPI me route ka exact match hota hai naki prefix based match.
+15. FastAPI me route ka exact match hota hai naki prefix based match.
 
-6. Get request can be seen in browser directly but not other requests.
+16. Get request can be seen in browser directly but not other requests.
 
-7. Why we need schema?
+17. For fastapi framework , uvicorn and hypercorn are web servers.
+
+18.  Why we need schema?
 Ans:
 (a) Its pain to get all the values from the body.
 (b) The client can send whatever data they want.
 (c) The data isn't getting validated.
 (d) We ultimately want client to send data in the format we expect.
 
-8. Yadi koi field ko optional banana hai to uska default value dena jarrrri hai.
+19. BaseModel aur pydantic ka use karke humlog schema ko validate karte hain.
 
-9. Pydantic model ko dictionry me convert karne ke liye use .dict 
+20. Yadi koi field ko optional banana hai to uska default value dena jaruri hai.
 
-10. In api naming always use the prural.
+21. Pydantic model ko dictionry me convert karne ke liye use .dict .
 
-19. url se aane wala cheez str rahega.
+22. In api naming always use the prural.
 
-20. 404 = Mot Found
+23. In FastAPI, `default` and `default_factory` are parameters used in the `Body` function to provide default values for request parameters.
 
-21.  Status codes provide a clear and standardized way for servers to communicate the outcome of a request to clients (browsers, APIs, etc.).
+- `default`: This parameter is used to set a default value for a field. If the field is not provided in the request body, the default value will be used.
 
-22. When we delete something and pass 204 as status code we should not send any data back otherwise fastapi will throw error
+- `default_factory`: This parameter is used when you want to set a default value that is a callable. The callable will be called to generate the default value. This is useful when you want to set a mutable default value, such as a list or a dictionary, because the default value is created anew each time the function is called.
 
-23. __init__.py kisi bhi directory ko package banata hai
+Here's an example of how to use `default` and `default_factory` in FastAPI:
+
+```python
+from fastapi import FastAPI, Body
+from typing import List, Dict
+
+app = FastAPI()
+
+@app.post("/items/")
+async def create_item(
+    name: str = Body(default="Default Item"),
+    description: str = Body(default=None),
+    tags: List[str] = Body(default=[]),
+    metadata: Dict[str, str] = Body(default_factory=dict)
+):
+    return {
+        "name": name,
+        "description": description,
+        "tags": tags,
+        "metadata": metadata
+    }
+```
+
+In this example:
+
+- `name` has a default value of "Default Item". If no value is provided for `name` in the request body, "Default Item" will be used.
+- `description` also has a default value of `None`, which means if no value is provided for `description`, it will be `None`.
+- `tags` is a list of strings. The default value is an empty list `[]`. If no value is provided for `tags`, an empty list will be used.
+- `metadata` is a dictionary of strings. The `default_factory` is `dict`, which means if no value is provided for `metadata`, an empty dictionary will be created.
+
+You can test this endpoint with different request bodies to see how the default values are used:
+
+```bash
+# Request without any body
+curl -X POST http://localhost:8000/items/
+# Returns: {"name":"Default Item","description":null,"tags":[],"metadata":{}}
+
+# Request with a custom name and description
+curl -X POST http://localhost:8000/items/ -d '{"name": "Custom Item", "description": "This is a custom item"}'
+# Returns: {"name":"Custom Item","description":"This is a custom item","tags":[],"metadata":{}}
+
+# Request with tags and metadata
+curl -X POST http://localhost:8000/items/ -d '{"tags": ["tag1", "tag2"], "metadata": {"key": "value"}}'
+# Returns: {"name":"Default Item","description":null,"tags":["tag1", "tag2"],"metadata":{"key": "value"}}
+```
+
+In each of these requests, the default values are used when the corresponding fields are not provided in the request body.
+
+
+24. url se aane wala cheez str rahega.
+
+25. In FastAPI, the `Body` function is used to define parameters that should be extracted from the request body. The `Body(...)` syntax is used to indicate that the parameter is required. It's shorthand for `Body(default=..., alias=None)`.
+
+Here's what each part of `Body(...)` means:
+
+- `default=...`: This means that the parameter is required. If the client does not provide a value for this parameter in the request body, FastAPI will raise an error. The `...` is a special singleton value used by Python that indicates that the value is missing.
+
+- `alias=None`: This is the default behavior. It means that the parameter name in the function signature should match the name of the field in the request body. If you want to use a different name in the function signature than in the request body, you can specify an alias with `Body(..., alias="actual_field_name_in_request_body")`.
+
+So, in the context of your code:
+
+```python
+@app.post("/create-post")
+async def post(payload: Union[Post, None] = Body(..., description="Request body")):
+    print(payload)
+    return payload
+```
+
+The `Body(...)` part means that the `payload` parameter is required and should be extracted from the request body. The `payload` parameter is expected to be either a `Post` object or `None`. If the client does not provide a `payload` in the request body, FastAPI will raise an error.
+
+If you want to make the `payload` parameter optional and handle the case where it is not provided, you should set a default value for it. Here's how you can modify the `post` function to make `payload` optional:
+
+```python
+@app.post("/create-post")
+async def post(payload: Union[Post, None] = Body(None, description="Request body")):
+    print(payload)
+    return payload
+```
+
+In this modified version, `Body(None)` indicates that the `payload` parameter is optional and defaults to `None` if not provided in the request body.
+
+26. 404 = Mot Found
+
+27. Fastapi ke andar @app decoration wale function me async har condition me work karega.
+
+28. When we pass the validation into function definition or function return type , it actually tries to do conversion of the incomming data into the corresponding type. If it is not able to do the conversion then it throws the validation error.
+
+29. Rest api me reponse {
+   data:[],
+   message:"Success or failure",
+   status_code:
+}
+
+30.  Status codes provide a clear and standardized way for servers to communicate the outcome of a request to clients (browsers, APIs, etc.).
+
+31. To see what all attributes and functions available in an object we use print(dir(object))
+
+32. When we delete something and pass 204 as status code we should not send any data back otherwise fastapi will throw error
+
+33. __init__.py kisi bhi directory ko package banata hai
 
 24. Kisis bhi folder ke andar yadi koi file import kar raha hai to __init__.py file ko uss folder me zaroor rakhna.
 
-25. pytest -v
+25. Fastapi does exact match on routes in a top down manner.
+
+26. Databases :
+
+
+27. f"""""" ka use karke query likhne par sql injections kiya jaa sakta hai.
+
+28. query string me hi likha jaata hai issliye saare variable string format me hona chahiye.
+
+29. Table me chnage yadi kiya hai to commit karo.
+
+30. SQLAlchemy or any orther orm (object relational mapping) has no way to talk to database. So you will need a sql driver (psycopg2) to talk to database.
+
+31. SQLAlchemy cannot modify the schema of table . For modifying the schema of the tables(migration) we need alembic.
+
+32. **x unpacks dictionary x.
+
+
+
+33. pytest -v
 
 26. Pytest will not print any of the print statements . To do so you need to :
 pytest -v -s. This will run all the tests. If you want to test some specific file then:
@@ -244,7 +365,11 @@ a.some_function()
 
 By following these steps, you can import modules from one directory into another within the same project.
 
-27. ANy time you will receive an exception , it will cause to fail the test case. 
+30. Any time you will receive an exception , it will cause to fail the test case. 
+mock_func.side_effect=Exception("An exception:")
+with pytest.raises(Exception,match="An exception:"):
+    await func1();
+    func2();
 
 28. Exceptions should be hamdled as a separate test case.
 
@@ -333,18 +458,121 @@ def test_add(example_data):
 
 Fixtures are a powerful feature of pytest and other testing frameworks, providing a structured and efficient way to manage the setup and teardown of test environments.
 
-30. response object ko json me change karo tab usko access kar paaoge.
+31. Scope of fixture:
+In pytest, you can define the scope of a fixture to control how often the fixture setup and teardown code is run. The available scopes are:
 
-31.TestClient is used to test api. It acts as same way as request and we can send any request using it.
+- **function**: The default scope. The fixture is created for each test function.
+- **class**: The fixture is created once per test class.
+- **module**: The fixture is created once per module (i.e., per file).
+- **session**: The fixture is created once per test session.
 
-32. request.json() will show the request in readable format.
+Here's how you can define the scope of a fixture:
 
-33. MagicMock is synchronous function. A coroutine is an asynchronous function like AsyncMock()
+### Defining a Fixture with Function Scope (default)
+```python
+import pytest
 
-34. An event loop is when we let some stuff that takes a long time do it's thing in the background. And when it's all set, the 'event loop' will 'pick it up'." is the most helpful and intuitive definition of event loop I've heard.
+@pytest.fixture
+def function_scope_fixture():
+    # Setup code
+    yield
+    # Teardown code
+```
+
+### Defining a Fixture with Class Scope
+```python
+@pytest.fixture(scope="class")
+def class_scope_fixture():
+    # Setup code
+    yield
+    # Teardown code
+```
+
+### Defining a Fixture with Module Scope
+```python
+@pytest.fixture(scope="module")
+def module_scope_fixture():
+    # Setup code
+    yield
+    # Teardown code
+```
+
+### Defining a Fixture with Session Scope
+```python
+@pytest.fixture(scope="session")
+def session_scope_fixture():
+    # Setup code
+    yield
+    # Teardown code
+```
+
+### Example Usage in Tests
+Here's an example of using these fixtures in tests:
+
+```python
+import pytest
+
+@pytest.fixture(scope="function")
+def function_scope_fixture():
+    print("Setting up function scope fixture")
+    yield
+    print("Tearing down function scope fixture")
+
+@pytest.fixture(scope="class")
+def class_scope_fixture():
+    print("Setting up class scope fixture")
+    yield
+    print("Tearing down class scope fixture")
+
+@pytest.fixture(scope="module")
+def module_scope_fixture():
+    print("Setting up module scope fixture")
+    yield
+    print("Tearing down module scope fixture")
+
+@pytest.fixture(scope="session")
+def session_scope_fixture():
+    print("Setting up session scope fixture")
+    yield
+    print("Tearing down session scope fixture")
+
+def test_function_scope(function_scope_fixture):
+    print("Running test with function scope fixture")
+
+class TestClassScope:
+    def test_class_scope(self, class_scope_fixture):
+        print("Running test with class scope fixture")
+
+def test_module_scope(module_scope_fixture):
+    print("Running test with module scope fixture")
+
+def test_session_scope(session_scope_fixture):
+    print("Running test with session scope fixture")
+```
+
+### Running the Tests
+To run the tests, simply execute pytest in the terminal:
+```sh
+pytest
+```
+
+### Output Explanation
+When you run the tests, you'll see the setup and teardown messages indicating the scope of each fixture. For example, the function scope fixture setup and teardown will be executed for each test function, while the class scope fixture will be set up once per class and used for all test methods in that class.
+
+By controlling the scope of fixtures, you can manage resource allocation and cleanup more effectively, optimizing your test suite's performance and clarity.
+
+31. response object ko json me change karo tab usko access kar paaoge.
+
+32.TestClient is used to test api. It acts as same way as request and we can send any request using it.
+
+33. request.json() will show the request in readable format.
+
+34. MagicMock is synchronous function. A coroutine is an asynchronous function like AsyncMock()
+
+35. An event loop is when we let some stuff that takes a long time do it's thing in the background. And when it's all set, the 'event loop' will 'pick it up'." is the most helpful and intuitive definition of event loop I've heard.
 
 
-35. Certainly! Let's break down the code and explain how decorators work in this context.
+36. Certainly! Let's break down the code and explain how decorators work in this context.
 
 1. **Define a decorator function:**
    
@@ -384,6 +612,6 @@ In summary, decorators in Python allow us to modify the behavior of functions by
 
 38. In fastapi json is same as dict.
 
-39. Yadi koi chhez kisi bar dependent hai to usko same file me hona chahiye ya import kiya hona chahiye.
+39. Yadi koi chhez kisi par dependent hai to usko same file me hona chahiye ya import kiya hona chahiye.
 
-40. 
+40.  Always write fixture in the last in function definition
