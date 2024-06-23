@@ -1,6 +1,6 @@
 from fastapi import FastAPI ,Body, Response,status, Request, HTTPException
 from pydantic import BaseModel, Field
-from typing import Union
+from typing import Union,Optional,List
 
 
 fake_db=[{"title":"Title of post 1","content":"Content of post ","id":1},{"title":"Title of post 1","content":"Content of post ","id":2},{"title":"Title of post 1","content":"Content of post ","id":3}
@@ -14,10 +14,13 @@ app=FastAPI(
   version="1.0"
 )
 
+
+
 class Post(BaseModel):
   title:str=Field(description="Title of post ",min_length=5, max_length=30)
   content:str=Field(description="Description of post",min_length=3,max_length=300)
   id:Union[int,None]=Field(description="Ration of post",default=None,gt=0)
+  name:Optional[List[str]]=Field(description="Check",default=None)
 
 @app.get("/")
 def get(request:Request):
